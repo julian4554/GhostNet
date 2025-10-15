@@ -1,6 +1,6 @@
 #  GhostNets – Sprint 1 Prototype
 
-**GhostNets** ist eine Webanwendung zur Erfassung, Meldung und Bergung sogenannter *Geisternetze* – also verlorener oder treibender Fischernetze, die eine Gefahr für Meereslebewesen darstellen.  
+**GhostNets** ist eine Webanwendung zur Erfassung, Meldung und Bergung sogenannter *Geisternetze*  also verlorener oder treibender Fischernetze, die eine Gefahr für Meereslebewesen darstellen.  
 Das Projekt wurde im Rahmen eines Hochschulprojekts entwickelt.
 
 ---
