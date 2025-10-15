@@ -31,7 +31,7 @@ Projekt mit Maven starten:
 mvn spring-boot:run
 ```
 
-Alternativ kann das Projekt direkt in **IntelliJ IDEA**, **Eclipse** oder **VS Code** (mit Spring Boot Plugin) ausgeführt werden.
+Alternativ kann das Projekt direkt in **IntelliJ IDEA** ausgeführt werden.
 
 ---
 
