@@ -1,0 +1,186 @@
+
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+    <link rel="icon" href="data:image/x-icon;base64,">  <!-- Flavicon loading error hat in der Konsole und f12 genervt, disabled weil kein anderes flavicon im projekt -->
+  <title>Shea Sepherd – GhostNet Monitor (Sprint-1)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 920px; }
+    h1 { color: #1a237e; }
+    nav { margin-bottom: 1rem; }
+    nav button { margin-right: 0.5rem; padding: 0.5rem 0.8rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
+    nav button.active { background: #1976d2; color: #fff; border-color: #1976d2; }
+    section { margin-bottom: 1rem; border: 1px solid #ccc; padding: 1rem; border-radius: 8px; }
+    input, button { margin: 0.25rem 0; padding: 0.4rem; font-size: 1rem; }
+    .net-list { background: #f9f9f9; padding: 1rem; border-radius: 8px; }
+    .hidden { display:none; }
+    button.primary { background:#1976d2; color:#fff; border: none; border-radius:4px; }
+    a.button { text-decoration:none; }
+  </style>
+</head>
+<body>
+  <h1>Shea Shepherd – Geisternetze (Sprint‑1 Prototyp)</h1>
+
+  <nav>
+    <button id="tabReporter" class="active">Netz melden</button>
+    <button id="tabSalvager">Netz Bergung</button>
+    <a class="button" href="/map.html" target="_blank"><button> Aktuelle Position bestehender Netze</button></a>
+  </nav>
+
+  <section id="reporterView">
+    <h2>Sie haben ein Netz gesichtet?</h2>
+    <form id="reportForm">
+      <label>Breitengrad: <input type="number" step="0.001" id="lat" min="-90"  max="90" required></label><br>
+      <label>Längengrad: <input type="number" step="0.001" id="lon" min="-180" max="180" required></label><br>
+      <label>Geschätzte Größe in (m²): <input type="text" id="size" required></label><br>
+      <label>Name: <input type="text" id="reporterName" required></label><br>
+      <label>Telefon (optional): <input type="text" id="reporterPhone"></label><br>
+      <button type="submit" class="primary">Melden</button>
+    </form>
+
+    <h3>Das Geisternetz ist am gemeldeten Standort nicht auffindbar?</h3>
+    <form id="lostForm">
+      <label>Netz-ID: <input type="number" id="lostId" required></label><br>
+      <label>Ihr Name: <input type="text" id="lostName" required></label><br>
+      <label>Ihre Telefonnummer: <input type="text" id="lostPhone" required></label><br>
+      <button type="submit" class="primary">Als verschollen melden</button>
+    </form>
+  </section>
+
+  <section id="salvagerView" class="hidden">
+    <h2>Zeig mir aktuelle Geisternetze!</h2>
+      <h4>Hinweis: Wenn sie sich mit anderen Bergenden absprechen wollen rufen sie uns unter +12 3456789 an. Aus Datenschutzgründen dürfen wir die Telefonnummer der Bergenden nicht auf der Webseite anzeigen!</h4>
+    <button id="loadAvailable" class="primary">Anzeigen</button>
+    <div id="nets" class="net-list"></div>
+
+    <h3>Sie wollen eine Bergung übernehmen?</h3>
+    <form id="assignForm">
+      <label>Netz-ID: <input type="number" id="assignId" required></label><br>
+      <label>Name: <input type="text" id="assignName" required></label><br>
+      <label>Telefon: <input type="text" id="assignPhone" required></label><br>
+      <button type="submit" class="primary">Übernehmen</button>
+    </form>
+
+    <h3>Sie haben ein Netz geborgen? Lassen sie es uns wissen!</h3>
+    <form id="recoverForm">
+      <label>Netz-ID: <input type="number" id="recoverId" required></label><br>
+      <label>Name: <input type="text" id="recoverName" required></label><br>
+      <label>Telefon: <input type="text" id="recoverPhone" required></label><br>
+      <button type="submit" class="primary">Als geborgen melden</button>
+    </form>
+  </section>
+
+  <script>
+    const api = '/api/nets';
+
+    // Tabs
+    const reporterView = document.getElementById('reporterView');
+    const salvagerView = document.getElementById('salvagerView');
+    const tabReporter = document.getElementById('tabReporter');
+    const tabSalvager = document.getElementById('tabSalvager');
+    tabReporter.addEventListener('click', () => {
+      reporterView.classList.remove('hidden');
+      salvagerView.classList.add('hidden');
+      tabReporter.classList.add('active'); tabSalvager.classList.remove('active');
+    });
+    tabSalvager.addEventListener('click', () => {
+      salvagerView.classList.remove('hidden');
+      reporterView.classList.add('hidden');
+      tabSalvager.classList.add('active'); tabReporter.classList.remove('active');
+    });
+
+    //  Netz melden logik
+    document.getElementById('reportForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = {
+        latitude: parseFloat(lat.value),
+        longitude: parseFloat(lon.value),
+        estimatedSize: size.value,
+        reporterName: reporterName.value || null,
+        reporterPhone: reporterPhone.value || null
+      };
+      const res = await fetch(api, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      alert(res.ok ? 'Geisternetz gemeldet.' : 'Fehler beim Melden.');
+      if (res.ok) e.target.reset();
+    });
+
+ // Offene Netze laden
+document.getElementById('loadAvailable').addEventListener('click', async () => {
+  const res = await fetch(api + '/available');
+  const nets = await res.json();
+  const div = document.getElementById('nets');
+  div.innerHTML = nets.length === 0 ? '<p>Keine offenen Geisternetze.</p>' : '';
+
+  nets.forEach(n => {
+    div.innerHTML += `
+      <div class="net-item" style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #ccc;">
+        <b>ID:</b> ${n.id}<br>
+        <b>Größe (m²):</b> ${n.estimatedSize}<br>
+        <b>Status:</b> ${n.status}<br>
+        <b>Koordinaten:</b> ${n.latitude}, ${n.longitude}<br>
+        ${n.salvager
+          ? `<b>Bergende Person:</b> ${n.salvager.name ?? ''} <br>`
+          : ''}
+        ${n.reporter
+          ? `<b>Meldende Person:</b> ${n.reporter.name ?? 'Anonym'}<br>`
+          : ''}
+      </div>`;
+  });
+});
+
+
+
+
+    // Bergung übernehmen
+    document.getElementById('assignForm').addEventListener('submit', async e => {
+    e.preventDefault();
+  const id = assignId.value;
+  const data = { name: assignName.value, phone: assignPhone.value };
+  const res = await fetch(`${api}/${id}/assign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const msg = await res.text();
+  alert(res.ok ? `Bergung für Netz ${id} übernommen.` : ('Fehler: ' + msg));
+  if (res.ok) e.target.reset();
+});
+
+
+    // Als geborgen melden
+    document.getElementById('recoverForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = recoverId.value;
+      const data = { name: recoverName.value, phone: recoverPhone.value };
+      const res = await fetch(`${api}/${id}/recover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const msg = await res.text();
+      alert(res.ok ? `Netz ${id} als geborgen markiert.` : ('Fehler: ' + msg));
+      if (res.ok) e.target.reset();
+    });
+
+    //  Als verschollen melden (nicht anonym)
+    document.getElementById('lostForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = lostId.value;
+      const data = { name: lostName.value, phone: lostPhone.value };
+      const res = await fetch(`${api}/${id}/lost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const msg = await res.text();
+      alert(res.ok ? `Netz ${id} als verschollen gemeldet.` : ('Fehler: ' + msg));
+      if (res.ok) e.target.reset();
+    });
+  </script>
+</body>
+</html>
