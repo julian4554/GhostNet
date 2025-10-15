@@ -41,11 +41,11 @@ Nach dem Start:
 
 **Weboberfläche:**  
 ```bash
-[http://localhost:8080](http://localhost:8080)
+http://localhost:8080
 ```
 **H2-Konsole:**
 ```bash
-[http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+http://localhost:8080/h2-console
 ```
 **JDBC-URL:**
 ```bash
